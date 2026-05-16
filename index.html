@@ -1335,8 +1335,30 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+
     <!-- Google API script — loaded after user provides client ID -->
     <script>
+        // ─── FIREBASE CONFIGURATION ────────────────────────────────────────────
+        // ⚠️ REPLACE THIS WITH YOUR FIREBASE CONFIG ⚠️
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebaseConfig.apiKey !== "YOUR_API_KEY" ? firebase.firestore() : null;
+        let firebaseUser = null;
         // ─── STATE ─────────────────────────────────────────────────────────────
         // ⚠️ HARDCODE YOUR GOOGLE CLIENT ID HERE ⚠️
         const HARDCODED_CLIENT_ID = "YOUR_CLIENT_ID_HERE"; 
@@ -1612,7 +1634,12 @@
             t.done = !t.done;
             save(); renderTasks();
         }
-        function save() { localStorage.setItem('domate_tasks', JSON.stringify(tasks)); }
+        function save() { 
+            localStorage.setItem('domate_tasks', JSON.stringify(tasks)); 
+            if (firebaseUser && db) {
+                db.collection('users').doc(firebaseUser.uid).set({ tasks }).catch(console.error);
+            }
+        }
         function shake(el) { el.style.animation = 'none'; requestAnimationFrame(() => { el.style.animation = 'shake 0.3s ease'; }); }
 
         // ─── GOOGLE CALENDAR ─────────────────────────────────────────────────────
@@ -1687,9 +1714,36 @@
                 btn.classList.add('connected');
                 txt.textContent = 'Google Calendar Connected';
                 showToast({ name: 'Google Calendar connected!', priority: 'low' }, 0, false, true);
+
+                // 🔥 Firebase Cloud Sync Integration
+                if (db) {
+                    const googleUser = gapi.auth2.getAuthInstance().currentUser.get();
+                    const id_token = googleUser.getAuthResponse().id_token;
+                    const credential = firebase.auth.GoogleAuthProvider.credential(id_token);
+                    firebase.auth().signInWithCredential(credential).then(res => {
+                        firebaseUser = res.user;
+                        showToast({ name: 'Cloud Sync Enabled', priority: 'low' }, 0, false, true);
+                        // Fetch tasks from Firestore
+                        db.collection('users').doc(firebaseUser.uid).get().then(doc => {
+                            if (doc.exists && doc.data().tasks) {
+                                tasks = doc.data().tasks;
+                                localStorage.setItem('domate_tasks', JSON.stringify(tasks));
+                                renderTasks();
+                                checkAllNotifications();
+                            } else {
+                                // New user, push current local tasks to cloud
+                                save();
+                            }
+                        });
+                    }).catch(e => console.error("Firebase Auth Error", e));
+                }
             } else {
                 btn.classList.remove('connected');
                 txt.textContent = 'Connect Google Calendar';
+                if (firebaseUser && db) {
+                    firebase.auth().signOut();
+                    firebaseUser = null;
+                }
             }
         }
 
