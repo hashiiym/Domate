@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domate — Monthly Planner</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f0ede8;
+            --surface: #faf8f5;
+            --surface2: #f3f0eb;
+            --border: #e4ddd4;
+            --text: #2c2825;
+            --text-muted: #8a8078;
+            --text-light: #b5aca2;
+            --accent: #6b8f71;
+            --accent-light: #e8f0e9;
+            --accent-mid: #a8c4ab;
+            --warm: #c4855a;
+            --warm-light: #f5e8de;
+            --sky: #5a7fa0;
+            --sky-light: #dde9f3;
+            --gold: #b8982a;
+            --gold-light: #f5f0d8;
+            --critical: #a05a5a;
+            --critical-light: #f3dddd;
+            --gcal: #1a73e8;
+            --gcal-light: #e8f0fe;
+            --shadow: 0 2px 12px rgba(44, 40, 37, 0.07);
+            --shadow-lg: 0 8px 32px rgba(44, 40, 37, 0.13);
+            --radius: 14px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 15px;
+            line-height: 1.6
+        }
+
+        /* HEADER */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 68px;
+            position: sticky;
+            top: 0;
+            z-index: 100
+        }
+
+        .logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 24px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px
+        }
+
+        .logo-badge {
+            background: var(--accent);
+            color: #fff;
+            font-size: 9px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 40px;
+            margin-left: 2px;
+            vertical-align: middle
+        }
+
+        .header-meta {
+            font-size: 13px;
+            color: var(--text-muted)
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        /* GOOGLE CONNECT BTN */
+        .gcal-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .gcal-btn:hover {
+            border-color: var(--gcal);
+            color: var(--gcal);
+            background: var(--gcal-light)
+        }
+
+        .gcal-btn.connected {
+            background: var(--gcal-light);
+            border-color: var(--gcal);
+            color: var(--gcal)
+        }
+
+        .gcal-btn svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0
+        }
+
+        .gcal-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--gcal);
+            display: none
+        }
+
+        .gcal-btn.connected .gcal-status-dot {
+            display: block
+        }
+
+        .notif-btn {
+            position: relative;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            font-size: 16px
+        }
+
+        .notif-btn:hover {
+            background: var(--surface2);
+            color: var(--text)
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: var(--warm);
+            border-radius: 50%;
+            border: 2px solid var(--surface);
+            display: none
+        }
+
+        .notif-badge.active {
+            display: block
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 40px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .btn-primary:hover {
+            background: #5a7a60;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(107, 143, 113, 0.35)
+        }
+
+        /* SETUP BANNER */
+        .setup-banner {
+            background: var(--gcal-light);
+            border: 1.5px solid #b3cef7;
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px
+        }
+
+        .setup-banner.hidden {
+            display: none
+        }
+
+        .setup-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+            margin-top: 1px
+        }
+
+        .setup-banner h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gcal);
+            margin-bottom: 4px
+        }
+
+        .setup-banner p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5
+        }
+
+        .setup-banner a {
+            color: var(--gcal);
+            font-weight: 600;
+            text-decoration: none
+        }
+
+        .setup-banner a:hover {
+            text-decoration: underline
+        }
+
+        .setup-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 18px;
+            flex-shrink: 0;
+            padding: 0 4px;
+            transition: color 0.2s
+        }
+
+        .setup-close:hover {
+            color: var(--text)
+        }
+
+        /* MAIN */
+        .main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px 80px
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px
+        }
+
+        .month-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 30px;
+            color: var(--text)
+        }
+
+        .month-title span {
+            color: var(--text-muted);
+            font-size: 22px
+        }
+
+        .nav-arrows {
+            display: flex;
+            gap: 6px
+        }
+
+        .nav-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: all 0.2s
+        }
+
+        .nav-btn:hover {
+            background: var(--surface2);
+            color: var(--text)
+        }
+
+        /* STATS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            transition: transform 0.2s
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow)
+        }
+
+        .stat-num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            line-height: 1;
+            margin-bottom: 4px
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em
+        }
+
+        .stat-card.total .stat-num {
+            color: var(--text)
+        }
+
+        .stat-card.done .stat-num {
+            color: var(--accent)
+        }
+
+        .stat-card.urgent .stat-num {
+            color: var(--warm)
+        }
+
+        .stat-card.overdue .stat-num {
+            color: var(--critical)
+        }
+
+        /* PROGRESS */
+        .progress-wrap {
+            margin-bottom: 24px
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-mid), var(--accent));
+            border-radius: 10px;
+            transition: width 0.5s ease
+        }
+
+        /* FILTER BAR */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap
+        }
+
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none
+        }
+
+        .filter-chip:hover {
+            border-color: var(--accent-mid);
+            color: var(--text)
+        }
+
+        .filter-chip.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff
+        }
+
+        /* TASK LIST */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .group-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-light);
+            padding: 6px 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .group-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border)
+        }
+
+        .task-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            display: grid;
+            grid-template-columns: 26px 1fr auto;
+            gap: 12px;
+            align-items: start;
+            transition: all 0.25s;
+            animation: slideIn 0.3s ease;
+            position: relative;
+            overflow: hidden
+        }
+
+        .task-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            border-radius: 3px 0 0 3px
+        }
+
+        .task-card.high::before {
+            background: var(--critical)
+        }
+
+        .task-card.medium::before {
+            background: var(--warm)
+        }
+
+        .task-card.low::before {
+            background: var(--sky)
+        }
+
+        .task-card:hover {
+            box-shadow: var(--shadow);
+            transform: translateX(2px)
+        }
+
+        .task-card.done {
+            opacity: 0.5
+        }
+
+        .task-card.done .task-name {
+            text-decoration: line-through;
+            color: var(--text-muted)
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .task-check {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-top: 1px
+        }
+
+        .task-check:hover {
+            border-color: var(--accent);
+            background: var(--accent-light)
+        }
+
+        .task-check.checked {
+            background: var(--accent);
+            border-color: var(--accent)
+        }
+
+        .task-check.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700
+        }
+
+        .task-name {
+            font-weight: 500;
+            font-size: 15px;
+            margin-bottom: 5px
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .task-date {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .task-date.near {
+            color: var(--warm);
+            font-weight: 600
+        }
+
+        .task-date.overdue {
+            color: var(--critical);
+            font-weight: 700
+        }
+
+        .priority-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 2px 8px;
+            border-radius: 40px
+        }
+
+        .priority-tag.high {
+            background: var(--critical-light);
+            color: var(--critical)
+        }
+
+        .priority-tag.medium {
+            background: var(--warm-light);
+            color: var(--warm)
+        }
+
+        .priority-tag.low {
+            background: var(--sky-light);
+            color: var(--sky)
+        }
+
+        .days-left {
+            font-size: 12px;
+            color: var(--text-light);
+            font-style: italic
+        }
+
+        .days-left.urgent {
+            color: var(--warm);
+            font-style: normal;
+            font-weight: 600
+        }
+
+        .days-left.overdue {
+            color: var(--critical);
+            font-style: normal;
+            font-weight: 700
+        }
+
+        /* GCAL SYNC INDICATOR on card */
+        .gcal-synced {
+            font-size: 11px;
+            color: var(--gcal);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 500
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-shrink: 0
+        }
+
+        .task-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 4px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .task-action-btn:hover {
+            background: var(--surface2);
+            color: var(--text-muted)
+        }
+
+        .task-action-btn.delete:hover {
+            background: var(--critical-light);
+            color: var(--critical)
+        }
+
+        .task-action-btn.gcal-sync {
+            color: var(--gcal);
+            opacity: 0.6
+        }
+
+        .task-action-btn.gcal-sync:hover {
+            background: var(--gcal-light);
+            opacity: 1
+        }
+
+        .task-action-btn.gcal-sync.synced {
+            opacity: 1
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-muted)
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5
+        }
+
+        .empty-state h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--text)
+        }
+
+        .empty-state p {
+            font-size: 14px
+        }
+
+        /* MODAL */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(44, 40, 37, 0.38);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px
+        }
+
+        .overlay.open {
+            display: flex;
+            animation: fadeIn 0.2s ease
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 460px;
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.25s ease
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0)
+            }
+        }
+
+        .modal-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            margin-bottom: 24px;
+            color: var(--text)
+        }
+
+        .form-group {
+            margin-bottom: 16px
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 6px
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            appearance: none
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            border-color: var(--accent-mid);
+            box-shadow: 0 0 0 3px rgba(107, 143, 113, 0.13)
+        }
+
+        .notif-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px
+        }
+
+        .notif-opt {
+            padding: 6px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--surface);
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none
+        }
+
+        .notif-opt:hover {
+            border-color: var(--accent-mid)
+        }
+
+        .notif-opt.selected {
+            background: var(--accent-light);
+            border-color: var(--accent-mid);
+            color: var(--accent)
+        }
+
+        /* GCAL section in modal */
+        .gcal-modal-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: var(--gcal-light);
+            border: 1.5px solid #b3cef7;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px
+        }
+
+        .gcal-modal-info {
+            font-size: 13px;
+            color: var(--gcal);
+            font-weight: 500
+        }
+
+        .gcal-modal-info small {
+            display: block;
+            color: #5a80b8;
+            font-weight: 400;
+            font-size: 12px;
+            margin-top: 1px
+        }
+
+        .toggle {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            flex-shrink: 0
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.3s
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background: var(--gcal)
+        }
+
+        .toggle input:checked+.toggle-slider::before {
+            transform: translateX(18px)
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 24px
+        }
+
+        .btn-cancel {
+            background: none;
+            border: 1.5px solid var(--border);
+            padding: 9px 20px;
+            border-radius: 40px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s
+        }
+
+        .btn-cancel:hover {
+            background: var(--surface2)
+        }
+
+        /* GCAL CONFIG MODAL */
+        .config-modal {
+            max-width: 520px
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            margin: 10px 0;
+            overflow-x: auto;
+            position: relative
+        }
+
+        .copy-code {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #313244;
+            border: none;
+            color: #cdd6f4;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s
+        }
+
+        .copy-code:hover {
+            background: #45475a
+        }
+
+        .step-num {
+            display: inline-flex;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--gcal);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            flex-shrink: 0
+        }
+
+        .setup-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            margin-bottom: 14px;
+            font-size: 14px;
+            color: var(--text)
+        }
+
+        .setup-step p {
+            flex: 1;
+            line-height: 1.5
+        }
+
+        .config-input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px
+        }
+
+        .config-input-row .form-input {
+            flex: 1
+        }
+
+        .btn-gcal {
+            background: var(--gcal);
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 40px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .btn-gcal:hover {
+            background: #1558c0
+        }
+
+        /* TOAST */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none
+        }
+
+        .toast {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--warm);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            max-width: 320px;
+            box-shadow: var(--shadow-lg);
+            animation: toastIn 0.35s ease, toastOut 0.35s ease forwards;
+            animation-delay: 0s, 4.65s;
+            pointer-events: all;
+            cursor: pointer
+        }
+
+        .toast.gcal {
+            border-left-color: var(--gcal)
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 3px
+        }
+
+        .toast-body {
+            font-size: 13px;
+            color: var(--text-muted)
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                opacity: 1
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(16px)
+            }
+        }
+
+        @media(max-width:600px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 14px 14px;
+            }
+
+            header {
+                padding: 0 16px;
+                height: 60px;
+            }
+
+            .main {
+                padding: 20px 16px 80px;
+            }
+
+            .month-title {
+                font-size: 24px;
+            }
+
+            .month-title span {
+                font-size: 18px;
+            }
+
+            .gcal-btn {
+                padding: 8px 12px;
+            }
+
+            .gcal-btn span {
+                display: none;
+            }
+
+            .task-card {
+                grid-template-columns: 24px 1fr;
+                padding: 14px 14px;
+            }
+
+            .task-actions {
+                grid-column: 1 / -1;
+                justify-content: flex-end;
+                padding-top: 10px;
+                margin-top: 6px;
+                border-top: 1px dashed var(--border);
+                width: 100%;
+            }
+
+            .modal {
+                padding: 24px 20px;
+            }
+
+            .btn-primary {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            .filter-chip {
+                padding: 5px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            Domate
+            <span class="logo-badge">Planner</span>
+        </div>
+        <div class="header-meta" id="headerDate"></div>
+        <div class="header-actions">
+            <button class="gcal-btn" id="gcalBtn" onclick="handleGcalConnect()">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M19.5 3h-15A1.5 1.5 0 003 4.5v15A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0019.5 3z"
+                        stroke="currentColor" stroke-width="1.5" />
+                    <path d="M3 9h18M9 3v18" stroke="currentColor" stroke-width="1.5" />
+                    <text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor"
+                        font-weight="bold">G</text>
+                </svg>
+                <span id="gcalBtnText">Connect Google Calendar</span>
+                <div class="gcal-status-dot"></div>
+            </button>
+            <button class="notif-btn" id="notifBell" onclick="checkAllNotifications()" title="Notifications">🔔
+                <span class="notif-badge" id="notifBadge"></span>
+            </button>
+            <button class="btn-primary" onclick="openModal()">＋ Add Task</button>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- SETUP BANNER -->
+        <div class="setup-banner" id="setupBanner">
+            <div class="setup-icon">📅</div>
+            <div>
+                <h4>Connect Google Calendar to sync your tasks</h4>
+                <p>Click <strong>"Connect Google Calendar"</strong> above, enter your Google OAuth Client ID, and tasks
+                    will automatically appear in your Google Calendar. Need help? <a href="#"
+                        onclick="openGcalConfig();return false">Open setup guide</a>.</p>
+            </div>
+            <button class="setup-close"
+                onclick="document.getElementById('setupBanner').classList.add('hidden')">×</button>
+        </div>
+
+        <div class="month-nav">
+            <div class="month-title" id="monthTitle"></div>
+            <div class="nav-arrows">
+                <button class="nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+                <button class="nav-btn" onclick="changeMonth(1)">&#8594;</button>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card total">
+                <div class="stat-num" id="statTotal">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card done">
+                <div class="stat-num" id="statDone">0</div>
+                <div class="stat-label">Done</div>
+            </div>
+            <div class="stat-card urgent">
+                <div class="stat-num" id="statUrgent">0</div>
+                <div class="stat-label">Due Soon</div>
+            </div>
+            <div class="stat-card overdue">
+                <div class="stat-num" id="statOverdue">0</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-label"><span>Monthly Progress</span><span id="progressPct">0%</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-chip active" onclick="setFilter('all',this)">All</div>
+            <div class="filter-chip" onclick="setFilter('high',this)">🔴 High</div>
+            <div class="filter-chip" onclick="setFilter('medium',this)">🟠 Medium</div>
+            <div class="filter-chip" onclick="setFilter('low',this)">🔵 Low</div>
+            <div class="filter-chip" onclick="setFilter('done',this)">✓ Done</div>
+            <div class="filter-chip" onclick="setFilter('overdue',this)">⚠ Overdue</div>
+            <div class="filter-chip" onclick="setFilter('synced',this)">📅 Synced</div>
+        </div>
+
+        <div class="task-list" id="taskList"></div>
+    </main>
+
+    <!-- ADD/EDIT TASK MODAL -->
+    <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-title" id="modalTitle">New Task</div>
+
+            <div class="gcal-modal-row" id="gcalModalRow">
+                <div class="gcal-modal-info">
+                    📅 Add to Google Calendar
+                    <small id="gcalModalHint">Connect Google Calendar first to enable auto-sync</small>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="addToGcal">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Task Name</label>
+                <input class="form-input" id="taskName" type="text" placeholder="What needs to be done?" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Due Date</label>
+                <input class="form-input" id="taskDate" type="date" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="taskPriority">
+                    <option value="high">🔴 High — Critical</option>
+                    <option value="medium" selected>🟠 Medium — Normal</option>
+                    <option value="low">🔵 Low — Someday</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notify Me Before Deadline</label>
+                <div class="notif-options" id="notifOptions">
+                    <div class="notif-opt selected" data-val="1">1 day</div>
+                    <div class="notif-opt selected" data-val="3">3 days</div>
+                    <div class="notif-opt" data-val="7">1 week</div>
+                    <div class="notif-opt" data-val="14">2 weeks</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveTask()">Save Task</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GOOGLE CALENDAR CONFIG MODAL -->
+    <div class="overlay" id="gcalOverlay" onclick="handleGcalOverlayClick(event)">
+        <div class="modal config-modal">
+            <div class="modal-title">🗓 Connect Google Calendar</div>
+
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">
+                Follow these steps to get your <strong>Google OAuth Client ID</strong>. This is a one-time setup.
+            </div>
+
+            <div class="setup-step">
+                <span class="step-num">1</span>
+                <p>Go to <a href="https://console.cloud.google.com/" target="_blank"
+                        style="color:var(--gcal);font-weight:600">Google Cloud Console</a>, create a project (or pick an
+                    existing one).</p>
+            </div>
+            <div class="setup-step">
+                <span class="step-num">2</span>
+                <p>Navigate to <strong>APIs & Services → Library</strong>, search for <em>"Google Calendar API"</em> and
+                    click <strong>Enable</strong>.</p>
+            </div>
+            <div class="setup-step">
+                <span class="step-num">3</span>
+                <p>Go to <strong>APIs & Services → OAuth consent screen</strong>. Choose <em>External</em>, fill your
+                    app name & email, save. Under <strong>Scopes</strong> add:<br>
+                    <code
+                        style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px">https://www.googleapis.com/auth/calendar.events</code>
+                </p>
+            </div>
+            <div class="setup-step">
+                <span class="step-num">4</span>
+                <p>Go to <strong>Credentials → Create Credentials → OAuth Client ID</strong>. Choose <em>Web
+                        application</em>. Under <strong>Authorized JavaScript origins</strong> add your site URL (or
+                    <code
+                        style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:12px">http://localhost</code>
+                    for local testing).
+                </p>
+            </div>
+            <div class="setup-step">
+                <span class="step-num">5</span>
+                <p>Copy the <strong>Client ID</strong> and paste it below:</p>
+            </div>
+
+            <div class="config-input-row">
+                <input class="form-input" id="clientIdInput" type="text"
+                    placeholder="xxxxxxxx.apps.googleusercontent.com" />
+                <button class="btn-gcal" onclick="saveClientId()">Connect</button>
+            </div>
+
+            <div
+                style="margin-top:20px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--text-muted);line-height:1.6">
+                💡 <strong>No backend needed.</strong> Your Client ID is stored locally in your browser. Tasks sync
+                directly to your personal Google Calendar.
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeGcalConfig()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Google API script — loaded after user provides client ID -->
+    <script>
+        // ─── STATE ─────────────────────────────────────────────────────────────
+        let tasks = JSON.parse(localStorage.getItem('domate_tasks') || '[]');
+        let currentFilter = 'all';
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let editingId = null;
+        let selectedNotifDays = [1, 3];
+        let gapiReady = false;
+        let gcalSignedIn = false;
+        let clientId = localStorage.getItem('domate_gcal_client_id') || '';
+
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
+        const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+
+        // ─── INIT ───────────────────────────────────────────────────────────────
+        function init() {
+            updateHeaderDate();
+            updateMonthTitle();
+            renderTasks();
+            checkAllNotifications();
+            setInterval(checkAllNotifications, 3600000);
+
+            if (clientId) {
+                loadGapiScript();
+                document.getElementById('setupBanner').classList.add('hidden');
+            }
+
+            // Notif toggles
+            document.querySelectorAll('.notif-opt').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const v = parseInt(opt.dataset.val);
+                    if (selectedNotifDays.includes(v)) {
+                        selectedNotifDays = selectedNotifDays.filter(x => x !== v);
+                        opt.classList.remove('selected');
+                    } else {
+                        selectedNotifDays.push(v);
+                        opt.classList.add('selected');
+                    }
+                });
+            });
+        }
+
+        function updateHeaderDate() {
+            document.getElementById('headerDate').textContent =
+                new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function updateMonthTitle() {
+            document.getElementById('monthTitle').innerHTML =
+                MONTHS[currentMonth] + ' <span>' + currentYear + '</span>';
+        }
+
+        function changeMonth(dir) {
+            currentMonth += dir;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            updateMonthTitle();
+            renderTasks();
+        }
+
+        // ─── FILTER ─────────────────────────────────────────────────────────────
+        function setFilter(f, el) {
+            currentFilter = f;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderTasks();
+        }
+
+        function getMonthTasks() {
+            return tasks.filter(t => {
+                const d = new Date(t.date);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+        }
+
+        function filterTasks(list) {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            return list.filter(t => {
+                const due = new Date(t.date); due.setHours(0, 0, 0, 0);
+                if (currentFilter === 'done') return t.done;
+                if (currentFilter === 'overdue') return !t.done && due < today;
+                if (currentFilter === 'high') return t.priority === 'high';
+                if (currentFilter === 'medium') return t.priority === 'medium';
+                if (currentFilter === 'low') return t.priority === 'low';
+                if (currentFilter === 'synced') return !!t.gcalEventId;
+                return true;
+            });
+        }
+
+        // ─── RENDER ─────────────────────────────────────────────────────────────
+        function renderTasks() {
+            const monthTasks = getMonthTasks();
+            const filtered = filterTasks(monthTasks);
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+
+            filtered.sort((a, b) => {
+                if (a.done !== b.done) return a.done ? 1 : -1;
+                if (PRIORITY_ORDER[a.priority] !== PRIORITY_ORDER[b.priority])
+                    return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            const total = monthTasks.length;
+            const done = monthTasks.filter(t => t.done).length;
+            const overdue = monthTasks.filter(t => !t.done && new Date(t.date) < today).length;
+            const urgent = monthTasks.filter(t => {
+                if (t.done) return false;
+                const diff = Math.ceil((new Date(t.date) - today) / 86400000);
+                return diff >= 0 && diff <= 3;
+            }).length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statDone').textContent = done;
+            document.getElementById('statUrgent').textContent = urgent;
+            document.getElementById('statOverdue').textContent = overdue;
+            const pct = total ? Math.round((done / total) * 100) : 0;
+            document.getElementById('progressPct').textContent = pct + '%';
+            document.getElementById('progressFill').style.width = pct + '%';
+
+            const list = document.getElementById('taskList');
+            if (!filtered.length) {
+                list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🌿</div>
+      <h3>All clear here</h3>
+      <p>No tasks found. Add one to get started.</p>
+    </div>`;
+                return;
+            }
+
+            let html = '';
+            if (['all', 'done', 'overdue', 'synced'].includes(currentFilter)) {
+                for (const g of [{ key: 'high', label: 'High Priority' }, { key: 'medium', label: 'Medium Priority' }, { key: 'low', label: 'Low Priority' }]) {
+                    const gi = filtered.filter(t => t.priority === g.key);
+                    if (!gi.length) continue;
+                    html += `<div class="group-label">${g.label}</div>`;
+                    gi.forEach(t => html += renderCard(t, today));
+                }
+            } else {
+                filtered.forEach(t => html += renderCard(t, today));
+            }
+            list.innerHTML = html;
+        }
+
+        function renderCard(t, today) {
+            const due = new Date(t.date); due.setHours(0, 0, 0, 0);
+            const diff = Math.ceil((due - today) / 86400000);
+            let dateClass = '', daysText = '';
+            if (!t.done) {
+                if (diff < 0) { dateClass = 'overdue'; daysText = `overdue by ${-diff}d`; }
+                else if (diff === 0) { dateClass = 'near'; daysText = 'due today'; }
+                else if (diff <= 3) { dateClass = 'near'; daysText = `${diff}d left`; }
+                else { daysText = `${diff}d left`; }
+            }
+            const dueStr = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const synced = t.gcalEventId ? `<span class="gcal-synced">📅 synced</span>` : '';
+            const gcalTip = t.gcalEventId ? 'Synced to Google Calendar' : 'Add to Google Calendar';
+            const gcalClass = t.gcalEventId ? 'synced' : '';
+
+            return `<div class="task-card ${t.priority} ${t.done ? 'done' : ''}">
+    <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleDone('${t.id}')"></div>
+    <div>
+      <div class="task-name">${esc(t.name)}</div>
+      <div class="task-meta">
+        <span class="task-date ${dateClass}">📅 ${dueStr}</span>
+        <span class="priority-tag ${t.priority}">${t.priority}</span>
+        ${daysText ? `<span class="days-left ${dateClass}">${daysText}</span>` : ''}
+        ${synced}
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="task-action-btn gcal-sync ${gcalClass}" onclick="syncTaskToGcal('${t.id}')" title="${gcalTip}">📅</button>
+      <button class="task-action-btn" onclick="editTask('${t.id}')" title="Edit">✏️</button>
+      <button class="task-action-btn delete" onclick="deleteTask('${t.id}')" title="Delete">🗑</button>
+    </div>
+  </div>`;
+        }
+
+        function esc(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ─── MODAL ─────────────────────────────────────────────────────────────
+        function openModal(id = null) {
+            editingId = id;
+            document.getElementById('modalTitle').textContent = id ? 'Edit Task' : 'New Task';
+            selectedNotifDays = [1, 3];
+
+            if (id) {
+                const t = tasks.find(x => x.id === id);
+                document.getElementById('taskName').value = t.name;
+                document.getElementById('taskDate').value = t.date;
+                document.getElementById('taskPriority').value = t.priority;
+                selectedNotifDays = t.notifDays || [1, 3];
+                document.getElementById('addToGcal').checked = false;
+            } else {
+                document.getElementById('taskName').value = '';
+                document.getElementById('taskDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('taskPriority').value = 'medium';
+                document.getElementById('addToGcal').checked = gcalSignedIn;
+            }
+
+            updateNotifUI();
+            updateGcalToggleState();
+            document.getElementById('overlay').classList.add('open');
+            setTimeout(() => document.getElementById('taskName').focus(), 100);
+        }
+
+        function closeModal() { document.getElementById('overlay').classList.remove('open'); editingId = null; }
+        function handleOverlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+        function updateNotifUI() {
+            document.querySelectorAll('.notif-opt').forEach(opt => {
+                opt.classList.toggle('selected', selectedNotifDays.includes(parseInt(opt.dataset.val)));
+            });
+        }
+
+        function updateGcalToggleState() {
+            const toggle = document.getElementById('addToGcal');
+            const hint = document.getElementById('gcalModalHint');
+            toggle.disabled = !gcalSignedIn;
+            hint.textContent = gcalSignedIn
+                ? 'Task will appear in your Google Calendar'
+                : 'Connect Google Calendar first to enable auto-sync';
+        }
+
+        // ─── SAVE / EDIT / DELETE ───────────────────────────────────────────────
+        async function saveTask() {
+            const name = document.getElementById('taskName').value.trim();
+            const date = document.getElementById('taskDate').value;
+            const priority = document.getElementById('taskPriority').value;
+            const syncGcal = document.getElementById('addToGcal').checked;
+
+            if (!name) { shake(document.getElementById('taskName')); return; }
+            if (!date) { shake(document.getElementById('taskDate')); return; }
+
+            let task;
+            if (editingId) {
+                const idx = tasks.findIndex(t => t.id === editingId);
+                task = { ...tasks[idx], name, date, priority, notifDays: [...selectedNotifDays] };
+                tasks[idx] = task;
+            } else {
+                task = {
+                    id: Date.now().toString(), name, date, priority, done: false,
+                    notifDays: [...selectedNotifDays], notifiedDays: [], gcalEventId: null
+                };
+                tasks.push(task);
+            }
+
+            save(); closeModal(); renderTasks();
+
+            if (syncGcal && gcalSignedIn) {
+                await pushToGcal(task);
+            }
+            checkAllNotifications();
+        }
+
+        function editTask(id) { openModal(id); }
+        function deleteTask(id) {
+            const t = tasks.find(x => x.id === id);
+            if (t && t.gcalEventId && gcalSignedIn) deleteGcalEvent(t.gcalEventId);
+            tasks = tasks.filter(t => t.id !== id);
+            save(); renderTasks(); checkAllNotifications();
+        }
+        function toggleDone(id) {
+            const t = tasks.find(x => x.id === id);
+            t.done = !t.done;
+            save(); renderTasks();
+        }
+        function save() { localStorage.setItem('domate_tasks', JSON.stringify(tasks)); }
+        function shake(el) { el.style.animation = 'none'; requestAnimationFrame(() => { el.style.animation = 'shake 0.3s ease'; }); }
+
+        // ─── GOOGLE CALENDAR ─────────────────────────────────────────────────────
+        function handleGcalConnect() {
+            if (gcalSignedIn) {
+                if (confirm('Disconnect Google Calendar?')) disconnectGcal();
+            } else {
+                openGcalConfig();
+            }
+        }
+
+        function openGcalConfig() {
+            document.getElementById('gcalOverlay').classList.add('open');
+            if (clientId) document.getElementById('clientIdInput').value = clientId;
+        }
+        function closeGcalConfig() { document.getElementById('gcalOverlay').classList.remove('open'); }
+        function handleGcalOverlayClick(e) { if (e.target === document.getElementById('gcalOverlay')) closeGcalConfig(); }
+
+        function saveClientId() {
+            const val = document.getElementById('clientIdInput').value.trim();
+            if (!val || !val.includes('apps.googleusercontent.com')) {
+                showToast({ name: 'Invalid Client ID', priority: 'high' }, 0, false, true);
+                return;
+            }
+            clientId = val;
+            localStorage.setItem('domate_gcal_client_id', clientId);
+            closeGcalConfig();
+            document.getElementById('setupBanner').classList.add('hidden');
+            loadGapiScript();
+        }
+
+        function loadGapiScript() {
+            if (document.getElementById('gapiScript')) { initGoogleAuth(); return; }
+            const s = document.createElement('script');
+            s.id = 'gapiScript';
+            s.src = 'https://apis.google.com/js/api.js';
+            s.onload = () => {
+                gapi.load('client:auth2', initGoogleAuth);
+            };
+            s.onerror = () => {
+                showToast({ name: 'Could not load Google API', priority: 'medium' }, 0, false, true);
+            };
+            document.head.appendChild(s);
+        }
+
+        async function initGoogleAuth() {
+            try {
+                await gapi.client.init({
+                    clientId,
+                    scope: SCOPES,
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
+                });
+                gapiReady = true;
+                const authInst = gapi.auth2.getAuthInstance();
+                authInst.isSignedIn.listen(updateSigninStatus);
+                updateSigninStatus(authInst.isSignedIn.get());
+
+                if (!authInst.isSignedIn.get()) {
+                    try {
+                        await authInst.signIn();
+                    } catch (e) {
+                        showToast({ name: 'Google sign-in cancelled', priority: 'low' }, 0, false, true);
+                    }
+                }
+            } catch (e) {
+                console.error('GAPI init error', e);
+                showToast({ name: 'Google Calendar setup error — check Client ID', priority: 'high' }, 0, false, true);
+            }
+        }
+
+        function updateSigninStatus(isSignedIn) {
+            gcalSignedIn = isSignedIn;
+            const btn = document.getElementById('gcalBtn');
+            const txt = document.getElementById('gcalBtnText');
+            if (isSignedIn) {
+                btn.classList.add('connected');
+                txt.textContent = 'Google Calendar Connected';
+                showToast({ name: 'Google Calendar connected!', priority: 'low' }, 0, false, true);
+            } else {
+                btn.classList.remove('connected');
+                txt.textContent = 'Connect Google Calendar';
+            }
+        }
+
+        function disconnectGcal() {
+            if (gapiReady) {
+                const auth = gapi.auth2.getAuthInstance();
+                auth.signOut();
+            }
+            gcalSignedIn = false;
+            updateSigninStatus(false);
+        }
+
+        async function pushToGcal(task) {
+            if (!gcalSignedIn || !gapiReady) {
+                // Fallback: open Google Calendar "add event" URL
+                openGcalFallback(task);
+                return;
+            }
+            try {
+                const dateStr = task.date; // YYYY-MM-DD
+                const event = {
+                    summary: `[Domate] ${task.name}`,
+                    description: `Priority: ${task.priority}\nCreated by Domate Planner`,
+                    start: { date: dateStr },
+                    end: { date: dateStr },
+                    colorId: task.priority === 'high' ? '11' : task.priority === 'medium' ? '6' : '7',
+                    reminders: {
+                        useDefault: false,
+                        overrides: (task.notifDays || []).map(d => ({ method: 'popup', minutes: d * 24 * 60 }))
+                    }
+                };
+                const res = await gapi.client.calendar.events.insert({ calendarId: 'primary', resource: event });
+                const idx = tasks.findIndex(t => t.id === task.id);
+                if (idx !== -1) { tasks[idx].gcalEventId = res.result.id; save(); renderTasks(); }
+                showToast({ name: task.name, priority: 'low' }, 0, false, true, '📅 Added to Google Calendar!');
+            } catch (e) {
+                console.error('GCal push error', e);
+                openGcalFallback(task);
+            }
+        }
+
+        function openGcalFallback(task) {
+            // Build Google Calendar quick-add URL (works without API)
+            const d = task.date.replace(/-/g, '');
+            const title = encodeURIComponent('[Domate] ' + task.name);
+            const details = encodeURIComponent('Priority: ' + task.priority + '\nFrom Domate Planner');
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${d}/${d}&details=${details}`;
+            window.open(url, '_blank');
+        }
+
+        async function syncTaskToGcal(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            if (task.gcalEventId) {
+                // Already synced — open in Google Calendar
+                window.open(`https://calendar.google.com/calendar/r/eventedit/${task.gcalEventId}`, '_blank');
+                return;
+            }
+            if (!gcalSignedIn || !gapiReady) {
+                openGcalFallback(task);
+                return;
+            }
+            await pushToGcal(task);
+        }
+
+        async function deleteGcalEvent(eventId) {
+            if (!gcalSignedIn || !gapiReady) return;
+            try {
+                await gapi.client.calendar.events.delete({ calendarId: 'primary', eventId });
+            } catch (e) { console.warn('GCal delete failed', e); }
+        }
+
+        // ─── NOTIFICATIONS ──────────────────────────────────────────────────────
+        function checkAllNotifications() {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            let hasNew = false;
+
+            tasks.forEach(t => {
+                if (t.done) return;
+                const due = new Date(t.date); due.setHours(0, 0, 0, 0);
+                const diff = Math.ceil((due - today) / 86400000);
+
+                (t.notifDays || []).forEach(nd => {
+                    const key = nd + '_' + t.id;
+                    if (diff === nd && !(t.notifiedDays || []).includes(key)) {
+                        showToast(t, nd);
+                        if (!t.notifiedDays) t.notifiedDays = [];
+                        t.notifiedDays.push(key);
+                        hasNew = true;
+                    }
+                });
+
+                if (diff < 0 && !(t.notifiedDays || []).includes('overdue_' + t.id)) {
+                    showToast(t, 0, true);
+                    if (!t.notifiedDays) t.notifiedDays = [];
+                    t.notifiedDays.push('overdue_' + t.id);
+                    hasNew = true;
+                }
+            });
+
+            if (hasNew) save();
+
+            const pending = tasks.filter(t => {
+                if (t.done) return false;
+                const due = new Date(t.date); due.setHours(0, 0, 0, 0);
+                return Math.ceil((due - new Date().setHours(0, 0, 0, 0)) / 86400000) <= 3;
+            }).length;
+            document.getElementById('notifBadge').classList.toggle('active', pending > 0);
+        }
+
+        function showToast(t, daysLeft, overdue = false, isSystem = false, customMsg = null) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (isSystem ? 'gcal' : t.priority);
+            const msg = customMsg || (overdue ? 'This task is overdue!'
+                : daysLeft === 0 ? 'Due today!'
+                    : `Due in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`);
+            toast.innerHTML = `<div class="toast-title">${isSystem ? '' : '📌 '}${esc(t.name)}</div>
+    <div class="toast-body">${msg}${!isSystem ? ' · ' + t.priority + ' priority' : ''}</div>`;
+            toast.onclick = () => toast.remove();
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        // ─── KEYBOARD ────────────────────────────────────────────────────────────
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeModal(); closeGcalConfig(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openModal(); }
+        });
+
+        // Shake animation
+        const st = document.createElement('style');
+        st.textContent = `@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}`;
+        document.head.appendChild(st);
+
+        init();
+    </script>
+</body>
+
+</html>
