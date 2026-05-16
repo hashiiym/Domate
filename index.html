@@ -1702,7 +1702,8 @@
                 updateSigninStatus(authInst.isSignedIn.get());
             } catch (e) {
                 console.error('GAPI init error', e);
-                showToast({ name: 'Google Calendar setup error — check Client ID or Origins', priority: 'high' }, 0, false, true);
+                const errMsg = e && e.error ? e.error : (e && e.message ? e.message : 'Origin error');
+                showToast({ name: 'Google Calendar Setup Error: ' + errMsg, priority: 'high' }, 0, false, true);
             }
         }
 
